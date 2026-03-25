@@ -15,7 +15,7 @@ from utils import seconds_to_time
 def translate_subtitles_batch(
     subtitles: List[Dict],
     batch_size: int = 20,
-    target_lang: str = "中文"
+    target_lang: str = "繁體中文"
 ) -> List[Dict]:
     """
     批量翻译字幕
@@ -26,15 +26,15 @@ def translate_subtitles_batch(
     Args:
         subtitles: 字幕列表（每项包含 {start, end, text}）
         batch_size: 每批翻译的字幕数量
-        target_lang: 目标语言
+        target_lang: 目标语言（繁體中文 或 简体中文）
 
     Returns:
         List[Dict]: 翻译后的字幕列表，每项包含 {start, end, text, translation}
     """
-    print(f"\n🌐 开始翻译字幕...")
-    print(f"   总条数: {len(subtitles)}")
+    print(f"\n🌐 開始翻譯字幕...")
+    print(f"   總條數: {len(subtitles)}")
     print(f"   批量大小: {batch_size}")
-    print(f"   目标语言: {target_lang}")
+    print(f"   目標語言: {target_lang}")
 
     # 准备批量翻译数据
     batches = []
@@ -53,23 +53,38 @@ def translate_subtitles_batch(
     print("\n" + "="*60)
     print("翻译要求:")
     print("="*60)
+    # 根据目标语言生成对应的翻译要求
+    if "繁" in target_lang:
+        lang_specific_instructions = """5. 使用繁體中文（台灣用語）
+6. 使用台灣慣用詞彙，例如：
+   - 「影片」而非「视频」
+   - 「軟體」而非「软件」
+   - 「網路」而非「网络」
+   - 「資料」而非「数据」
+   - 「程式」而非「程序」
+   - 「人工智慧」而非「人工智能」（或保留 AI）"""
+    else:
+        lang_specific_instructions = """5. 使用简体中文（中国大陆用语）
+6. 使用中国大陆惯用词汇"""
+
     print(f"""
-请将上述字幕翻译为{target_lang}。
+請將上述字幕翻譯為{target_lang}。
 
-翻译要求：
-1. 保持技术术语的准确性
-2. 口语化表达（适合短视频）
-3. 简洁流畅（避免冗长）
-4. 保持原意，不要添加或删减内容
+翻譯要求：
+1. 保持技術術語的準確性
+2. 口語化表達（適合短影片）
+3. 簡潔流暢（避免冗長）
+4. 保持原意，不要添加或刪減內容
+{lang_specific_instructions}
 
-输出格式（JSON）：
+輸出格式（JSON）：
 [
-  {{"start": 0.0, "end": 3.5, "text": "原文", "translation": "译文"}},
-  {{"start": 3.5, "end": 7.2, "text": "原文", "translation": "译文"}},
+  {{"start": 0.0, "end": 3.5, "text": "原文", "translation": "譯文"}},
+  {{"start": 3.5, "end": 7.2, "text": "原文", "translation": "譯文"}},
   ...
 ]
 
-请分批翻译，每批 {batch_size} 条。
+請分批翻譯，每批 {batch_size} 條。
 """)
 
     # 注意：实际翻译由 Claude 在 Skill 执行时完成
@@ -81,7 +96,7 @@ def translate_subtitles_batch(
             'start': sub['start'],
             'end': sub['end'],
             'text': sub['text'],
-            'translation': '[待翻译]'  # Claude 会在运行时替换
+            'translation': '[待翻譯]'  # Claude 會在運行時替換
         })
 
     return translated_subtitles
@@ -122,7 +137,7 @@ def create_bilingual_subtitles(
 
             # 双语文本
             english = sub['text']
-            chinese = sub.get('translation', '[未翻译]')
+            chinese = sub.get('translation', '[未翻譯]')
 
             if english_first:
                 f.write(f"{english}\n{chinese}\n")

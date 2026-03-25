@@ -12,21 +12,23 @@ from typing import Dict
 
 def generate_summary(
     chapter_info: Dict,
-    output_path: str = None
+    output_path: str = None,
+    target_lang: str = "繁體中文"
 ) -> str:
     """
-    生成总结文案
+    生成總結文案
 
-    注意：此函数需要在 Claude Code Skill 环境中调用
-    Claude 会自动处理文案生成逻辑
+    注意：此函數需要在 Claude Code Skill 環境中調用
+    Claude 會自動處理文案生成邏輯
 
     Args:
-        chapter_info: 章节信息，包含：
-            - title: 章节标题
-            - time_range: 时间范围
+        chapter_info: 章節資訊，包含：
+            - title: 章節標題
+            - time_range: 時間範圍
             - summary: 核心摘要
-            - keywords: 关键词列表
-        output_path: 输出文件路径（可选）
+            - keywords: 關鍵詞列表
+        output_path: 輸出檔案路徑（可選）
+        target_lang: 目標語言（繁體中文 或 简体中文）
 
     Returns:
         str: 生成的文案
@@ -43,28 +45,32 @@ def generate_summary(
     print("\n" + "="*60)
     print("文案生成要求:")
     print("="*60)
-    print("""
-请基于上述章节信息生成适合社交媒体的文案。
+    # 根据目标语言生成对应的平台要求
+    if "繁" in target_lang:
+        platform_instructions = """3. 適合平台：
+   - YouTube 社群：口語化，有 emoji，500 字以內
+   - Facebook/Instagram：精煉，突出金句，300 字以內
+   - Threads：簡短有力，150 字以內
+4. 使用繁體中文撰寫，使用台灣慣用詞彙和語法"""
 
-文案要求：
-1. 吸引人的标题（10-20字）
-2. 核心观点（3-5个要点，每个1-2句话）
-3. 适合平台：
+        platform_template = """## 適合平台
+
+### YouTube 社群版本（500字）
+[文案內容]
+
+### Facebook / Instagram 版本（300字）
+[文案內容]
+
+### Threads 版本（150字）
+[文案內容]"""
+    else:
+        platform_instructions = """3. 适合平台：
    - 小红书：口语化，有emoji，1000字以内
    - 抖音：精炼，突出金句，300字以内
    - 微信公众号：详细，结构清晰，不限字数
+4. 使用简体中文撰写"""
 
-输出格式（Markdown）：
-
-# [标题]
-
-## 核心观点
-
-1. 观点1
-2. 观点2
-3. 观点3
-
-## 适合平台
+        platform_template = """## 适合平台
 
 ### 小红书版本（1000字）
 [文案内容]
@@ -73,27 +79,50 @@ def generate_summary(
 [文案内容]
 
 ### 微信公众号版本
-[文案内容]
+[文案内容]"""
 
-## 标签
+    print(f"""
+請基於上述章節資訊生成適合社群媒體的文案。
 
-#标签1 #标签2 #标签3
+文案要求：
+1. 吸引人的標題（10-20字）
+2. 核心觀點（3-5個要點，每個1-2句話）
+{platform_instructions}
+
+輸出格式（Markdown）：
+
+# [標題]
+
+## 核心觀點
+
+1. 觀點1
+2. 觀點2
+3. 觀點3
+
+{platform_template}
+
+## 標籤
+
+#標籤1 #標籤2 #標籤3
 """)
 
-    # 生成基础文案（占位符）
-    summary_template = f"""# {chapter_info.get('title', '未命名章节')}
+    # 根据目标语言生成对应的模板
+    if "繁" in target_lang:
+        platform_section = """## 適合平台
 
-## 章节信息
+### YouTube 社群版本
 
-- 时间范围: {chapter_info.get('time_range', 'N/A')}
-- 核心摘要: {chapter_info.get('summary', 'N/A')}
-- 关键词: {', '.join(chapter_info.get('keywords', []))}
+[待生成]
 
-## 核心观点
+### Facebook / Instagram 版本
 
-[待生成 - Claude 会在 Skill 执行时自动填充]
+[待生成]
 
-## 适合平台
+### Threads 版本
+
+[待生成]"""
+    else:
+        platform_section = """## 适合平台
 
 ### 小红书版本
 
@@ -105,15 +134,30 @@ def generate_summary(
 
 ### 微信公众号版本
 
-[待生成]
+[待生成]"""
 
-## 标签
+    # 生成基础文案（占位符）
+    summary_template = f"""# {chapter_info.get('title', '未命名章節')}
+
+## 章節資訊
+
+- 時間範圍: {chapter_info.get('time_range', 'N/A')}
+- 核心摘要: {chapter_info.get('summary', 'N/A')}
+- 關鍵詞: {', '.join(chapter_info.get('keywords', []))}
+
+## 核心觀點
+
+[待生成 - Claude 會在 Skill 執行時自動填充]
+
+{platform_section}
+
+## 標籤
 
 {' '.join(['#' + kw for kw in chapter_info.get('keywords', [])])}
 
 ---
 
-生成时间: {chapter_info.get('generated_at', 'N/A')}
+生成時間: {chapter_info.get('generated_at', 'N/A')}
 """
 
     # 保存到文件（如果指定）
@@ -183,28 +227,29 @@ def create_chapter_info(
 def main():
     """命令行入口"""
     if len(sys.argv) < 2:
-        print("Usage: python generate_summary.py <chapter_info_json> [output_file]")
-        print("   or: python generate_summary.py --create <title> <time_range> <summary> <keywords> [output_file]")
+        print("Usage: python generate_summary.py <chapter_info_json> [output_file] [target_lang]")
+        print("   or: python generate_summary.py --create <title> <time_range> <summary> <keywords> [output_file] [target_lang]")
         print("\nArguments:")
-        print("  chapter_info_json - 章节信息 JSON 文件路径")
-        print("  output_file       - 输出文件路径（可选，默认为 summary.md）")
+        print("  chapter_info_json - 章節資訊 JSON 檔案路徑")
+        print("  output_file       - 輸出檔案路徑（可選，預設為 summary.md）")
+        print("  target_lang       - 目標語言（可選，預設為 繁體中文）")
         print("\nCreate mode arguments:")
-        print("  --create    - 创建模式")
-        print("  title       - 章节标题")
-        print("  time_range  - 时间范围（如 '00:00 - 03:15'）")
+        print("  --create    - 建立模式")
+        print("  title       - 章節標題")
+        print("  time_range  - 時間範圍（如 '00:00 - 03:15'）")
         print("  summary     - 核心摘要")
-        print("  keywords    - 关键词（逗号分隔）")
+        print("  keywords    - 關鍵詞（逗號分隔）")
         print("\nExample:")
         print("  python generate_summary.py chapter.json")
-        print("  python generate_summary.py chapter.json summary.md")
-        print("  python generate_summary.py --create 'AGI指数曲线' '00:00-03:15' '核心摘要' 'AGI,指数增长,Claude' summary.md")
+        print("  python generate_summary.py chapter.json summary.md 繁體中文")
+        print("  python generate_summary.py --create 'AGI指數曲線' '00:00-03:15' '核心摘要' 'AGI,指數成長,Claude' summary.md")
         sys.exit(1)
 
     try:
         if sys.argv[1] == '--create':
-            # 创建模式
+            # 建立模式
             if len(sys.argv) < 6:
-                print("❌ 创建模式需要提供: title, time_range, summary, keywords")
+                print("❌ 建立模式需要提供: title, time_range, summary, keywords")
                 sys.exit(1)
 
             title = sys.argv[2]
@@ -212,6 +257,7 @@ def main():
             summary = sys.argv[4]
             keywords = sys.argv[5].split(',')
             output_file = sys.argv[6] if len(sys.argv) > 6 else 'summary.md'
+            target_lang = sys.argv[7] if len(sys.argv) > 7 else '繁體中文'
 
             chapter_info = create_chapter_info(title, time_range, summary, keywords)
 
@@ -219,23 +265,24 @@ def main():
             # JSON 模式
             json_file = sys.argv[1]
             output_file = sys.argv[2] if len(sys.argv) > 2 else 'summary.md'
+            target_lang = sys.argv[3] if len(sys.argv) > 3 else '繁體中文'
 
             chapter_info = load_chapter_info(json_file)
 
         # 生成文案
-        summary = generate_summary(chapter_info, output_file)
+        summary = generate_summary(chapter_info, output_file, target_lang)
 
         print("\n" + "="*60)
-        print("生成的文案预览:")
+        print("生成的文案預覽:")
         print("="*60)
         print(summary)
 
-        print("\n⚠️  提示：此脚本需要在 Claude Code Skill 中运行")
-        print("   Claude 会自动生成详细的文案内容")
-        print("   当前仅输出模板")
+        print("\n⚠️  提示：此腳本需要在 Claude Code Skill 中運行")
+        print("   Claude 會自動生成詳細的文案內容")
+        print("   當前僅輸出模板")
 
     except Exception as e:
-        print(f"\n❌ 错误: {str(e)}")
+        print(f"\n❌ 錯誤: {str(e)}")
         import traceback
         traceback.print_exc()
         sys.exit(1)

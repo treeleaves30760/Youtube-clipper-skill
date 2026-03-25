@@ -151,12 +151,17 @@ allowed-tools:
    - 提供章节编号供用户选择
    - 支持多选（可以选择多个章节）
 
-2. 询问处理选项：
+2. 询问翻译语言偏好：
+   - **繁體中文**（適合台灣、香港用戶）
+   - **简体中文**（适合中国大陆用户）
+   - 默认：繁體中文
+
+3. 询问处理选项：
    - 是否生成双语字幕？（英文 + 中文）
    - 是否烧录字幕到视频？（硬字幕）
    - 是否生成总结文案？
 
-3. 确认用户选择并展示处理计划
+4. 确认用户选择并展示处理计划
 
 ---
 
@@ -182,13 +187,16 @@ python3 scripts/clip_video.py <video_path> <start_time> <end_time> <output_path>
 
 #### 5.3 翻译字幕（如果用户选择）
 ```bash
-python3 scripts/translate_subtitles.py <subtitle_path>
+python3 scripts/translate_subtitles.py <subtitle_path> [output_file] [batch_size]
 ```
 - **批量翻译优化**: 每批 20 条字幕一起翻译（节省 95% API 调用）
+- **根据用户选择的语言翻译**：繁體中文或简体中文
 - 翻译策略：
   - 保持技术术语的准确性
   - 口语化表达（适合短视频）
   - 简洁流畅（避免冗长）
+  - **繁體中文**：使用台灣慣用詞彙和語法（如「影片」而非「视频」、「軟體」而非「软件」）
+  - **简体中文**：使用中国大陆惯用词汇
 - 输出: `<章节标题>_translated.srt`
 
 #### 5.4 生成双语字幕文件（如果用户选择）
@@ -214,8 +222,11 @@ python3 scripts/burn_subtitles.py <video_path> <subtitle_path> <output_path>
 python3 scripts/generate_summary.py <chapter_info>
 ```
 - 基于章节标题、摘要和关键词
-- 生成适合社交媒体的文案
-- 包含: 标题、核心观点、适合平台（小红书、抖音等）
+- **根据用户选择的语言生成对应文案**
+- 生成适合社交媒体的文案：
+  - **繁體中文**：YouTube、Facebook、Instagram、Threads、LINE（台灣市場）
+  - **简体中文**：小红书、抖音、微信公众号（中国大陆市场）
+- 包含: 标题、核心观点、适合平台
 - 输出: `<章节标题>_summary.md`
 
 **进度展示**:
